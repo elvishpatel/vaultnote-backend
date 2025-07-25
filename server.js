@@ -64,4 +64,19 @@ app.get('/notes', async (req, res) => {
   res.json(decryptedNotes);
 });
 
+// DELETE route
+app.delete('/delete/:id', async (req, res) => {
+  await Note.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
+});
+
+// UPDATE route
+app.put('/update/:id', async (req, res) => {
+  const { title, text, tags } = req.body;
+  const encryptedText = encrypt(text);
+  await Note.findByIdAndUpdate(req.params.id, { title, encryptedText, tags });
+  res.json({ success: true });
+});
+
+
 app.listen(3000, () => console.log("VaultNote backend running on port 3000"));
