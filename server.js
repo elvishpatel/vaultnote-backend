@@ -58,7 +58,7 @@ app.post('/add', async (req, res) => {
 app.get('/notes', async (req, res) => {
   const notes = await Note.find().sort({ createdAt: -1 });
   const decryptedNotes = notes.map(n => ({
-    id: n._id, // <-- add this
+    id: n.id, // <-- add this
     title: n.title,
     text: decrypt(n.encryptedText),
     tags: n.tags,
@@ -77,7 +77,7 @@ app.get('/search', async (req, res) => {
   }).sort({ createdAt: -1 });
 
   const decryptedNotes = notes.map(n => ({
-    id: n._id,
+    id: n.id,
     title: n.title,
     text: decrypt(n.encryptedText),
     tags: n.tags,
