@@ -64,19 +64,44 @@ app.get('/notes', async (req, res) => {
   res.json(decryptedNotes);
 });
 
-// DELETE route
-app.delete('/delete/:id', async (req, res) => {
-  await Note.findByIdAndDelete(req.params.id);
-  res.json({ success: true });
+// DELETE Note by ID
+app.delete('/notes/:id', async (req, res) => {
+  try {
+    const deletedNote = await Note.findByIdAndDelete(req.params.id);
+    if (!deletedNote) {
+      return res.status(404).json({ success: false, message: 'Note not found' });
+    }
+    res.json({ success: true, message: 'Note deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
 });
 
-// UPDATE route
-app.put('/update/:id', async (req, res) => {
-  const { title, text, tags } = req.body;
-  const encryptedText = encrypt(text);
-  await Note.findByIdAndUpdate(req.params.id, { title, encryptedText, tags });
-  res.json({ success: true });
+// UPDATE Note by ID
+app.put('/notes/:id', async (req, res) => {
+  try {
+    const { title, text, tags } = req.body;
+    if (!title || !text) {
+      return res.status(400).json({ success: false, message: 'Title and text are required' });
+    }
+
+    const encryptedText = encrypt(text);
+    const updatedNote = await Note.findByIdAndUpdate(
+      req.params.id,
+      { title, encryptedText, tags },
+      { new: true } // return the updated note
+    );
+
+    if (!updatedNote) {
+      return res.status(404).json({ success: false, message: 'Note not found' });
+    }
+
+    res.json({ success: true, message: 'Note updated successfully', note: updatedNote });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
 });
+
 
 
 app.listen(3000, () => console.log("VaultNote backend running on port 3000"));
