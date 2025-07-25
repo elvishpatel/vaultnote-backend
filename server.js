@@ -29,7 +29,9 @@ const algorithm = 'aes-256-cbc';
 const key = crypto.createHash('sha256').update(String(process.env.SECRET_KEY)).digest('base64').substr(0, 32);
 const iv = crypto.randomBytes(16);
 
+// Encrypt
 function encrypt(text) {
+  const iv = crypto.randomBytes(16); // <-- Move IV here
   const cipher = crypto.createCipheriv(algorithm, key, iv);
   let encrypted = cipher.update(text, 'utf8', 'hex') + cipher.final('hex');
   return iv.toString('hex') + ':' + encrypted;
@@ -56,6 +58,7 @@ app.post('/add', async (req, res) => {
 app.get('/notes', async (req, res) => {
   const notes = await Note.find().sort({ createdAt: -1 });
   const decryptedNotes = notes.map(n => ({
+    id: n._id, // <-- add this
     title: n.title,
     text: decrypt(n.encryptedText),
     tags: n.tags,
@@ -63,6 +66,26 @@ app.get('/notes', async (req, res) => {
   }));
   res.json(decryptedNotes);
 });
+
+app.get('/search', async (req, res) => {
+  const { q } = req.query;
+  const notes = await Note.find({
+    $or: [
+      { title: { $regex: q, $options: 'i' } },
+      { tags: { $regex: q, $options: 'i' } }
+    ]
+  }).sort({ createdAt: -1 });
+
+  const decryptedNotes = notes.map(n => ({
+    id: n._id,
+    title: n.title,
+    text: decrypt(n.encryptedText),
+    tags: n.tags,
+    createdAt: n.createdAt
+  }));
+  res.json(decryptedNotes);
+});
+
 
 // DELETE Note by ID
 app.delete('/notes/:id', async (req, res) => {
