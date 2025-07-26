@@ -31,7 +31,7 @@ const iv = crypto.randomBytes(16);
 
 // Encrypt
 function encrypt(text) {
-  const iv = crypto.randomBytes(16); // <-- Move IV here
+  const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(algorithm, key, iv);
   let encrypted = cipher.update(text, 'utf8', 'hex') + cipher.final('hex');
   return iv.toString('hex') + ':' + encrypted;
@@ -58,7 +58,7 @@ app.post('/add', async (req, res) => {
 app.get('/notes', async (req, res) => {
   const notes = await Note.find().sort({ createdAt: -1 });
   const decryptedNotes = notes.map(n => ({
-    id: n.id, // <-- add this
+    id: n.id,
     title: n.title,
     text: decrypt(n.encryptedText),
     tags: n.tags,
@@ -112,7 +112,7 @@ app.put('/notes/:id', async (req, res) => {
     const updatedNote = await Note.findByIdAndUpdate(
       req.params.id,
       { title, encryptedText, tags },
-      { new: true } // return the updated note
+      { new: true }
     );
 
     if (!updatedNote) {
